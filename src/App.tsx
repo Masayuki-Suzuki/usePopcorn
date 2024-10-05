@@ -28,6 +28,7 @@ export type WatchedMovie = {
     runtime: number
     imdbRating: number
     userRating: number
+    countRatingDecisions: number
 }
 
 export default function App() {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Nullable } from '../types/utilities'
 import StarRating from '../molecues/StarRating'
 import ErrorMessage from '../molecues/ErrorMessage'
@@ -35,6 +35,8 @@ const MovieDetails = ({ imdbID, onCloseMovie, onAddWatchedMovie, watchedMovies }
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<Nullable<ErrorResponse>>(null)
     const [imageURL, setImageURL] = useState('')
+
+    const countRef = useRef(0)
 
     const isWatched = watchedMovies.some(movie => movie.imdbID === imdbID)
 
@@ -98,7 +100,8 @@ const MovieDetails = ({ imdbID, onCloseMovie, onAddWatchedMovie, watchedMovies }
             poster: movieDetails.poster,
             runtime: Number(movieDetails.runtime.split(' ')[0]),
             imdbRating: Number(movieDetails.imdbrating),
-            userRating: rating
+            userRating: rating,
+            countRatingDecisions: countRef.current
         }
 
         onAddWatchedMovie(newAddWatchedMovie)
@@ -126,6 +129,12 @@ const MovieDetails = ({ imdbID, onCloseMovie, onAddWatchedMovie, watchedMovies }
             document.title = 'usePopcorn'
         }
     }, [movieDetails])
+
+    useEffect(() => {
+        if (rating) {
+            countRef.current++
+        }
+    }, [rating])
 
     useEffect(() => {
         if (isWatched) {
