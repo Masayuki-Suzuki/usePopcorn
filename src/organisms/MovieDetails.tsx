@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { Nullable } from '../types/utilities'
 import StarRating from '../molecues/StarRating'
 import ErrorMessage from '../molecues/ErrorMessage'
-import { WatchedMovie } from '../App'
 import { convertLowercaseKeys } from '../libs'
+import { useKey } from '../hooks/useKey'
+import { WatchedMovie } from '../hooks/useLocalStorageState'
 
 type MovieDetailsProps = {
     imdbID: string
@@ -107,12 +108,6 @@ const MovieDetails = ({ imdbID, onCloseMovie, onAddWatchedMovie, watchedMovies }
         onAddWatchedMovie(newAddWatchedMovie)
     }
 
-    const handleCloseMovie = (e: KeyboardEvent) => {
-        if (e.code === 'Escape') {
-            onCloseMovie()
-        }
-    }
-
     useEffect(() => {
         void fetchMovieDetails()
     }, [imdbID])
@@ -143,13 +138,9 @@ const MovieDetails = ({ imdbID, onCloseMovie, onAddWatchedMovie, watchedMovies }
                 setRating(targetMovie.userRating)
             }
         }
-
-        document.addEventListener('keyup', handleCloseMovie)
-
-        return () => {
-            document.removeEventListener('keyup', handleCloseMovie)
-        }
     }, [])
+
+    useKey('Escape', onCloseMovie)
 
     return (
         <div className="details">

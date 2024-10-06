@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react'
-import { useDebouncedCallback } from 'use-debounce'
 import Navigation from './organisms/Navigation'
 import MoviesList from './organisms/MoviesList'
 import SearchBar from './molecues/SearchBar'
@@ -11,7 +10,8 @@ import Main from './organisms/Main'
 import { Nullable } from './types/utilities'
 import ErrorMessage from './molecues/ErrorMessage'
 import MovieDetails from './organisms/MovieDetails'
-import { convertLowercaseKeys } from './libs'
+import { useMovies } from './hooks/useMovies'
+import { useLocalStorageState, WatchedMovie } from './hooks/useLocalStorageState'
 
 export type Movie = {
     imdbid: string
@@ -20,95 +20,29 @@ export type Movie = {
     poster: string
     type?: string
 }
-export type WatchedMovie = {
-    imdbID: string
-    title: string
-    year: string
-    poster: string
-    runtime: number
-    imdbRating: number
-    userRating: number
-    countRatingDecisions: number
-}
 
 export default function App() {
     const [query, setQuery] = useState('')
-    const [movies, setMovies] = useState<Movie[]>([])
-    const [watched, setWatched] = useState<WatchedMovie[]>([])
-    const [isLoading, setIsLoading] = useState(false)
-    const [error, setError] = useState<Nullable<string>>(null)
     const [selectedMovieID, setSelectedMovieID] = useState<Nullable<string>>(null)
+    const [movies, isLoading, error] = useMovies(query, handleCloseMovieDetails)
+    const [watched, setWatched] = useLocalStorageState<WatchedMovie[]>([], 'watchedMovies')
 
-    const fetchMovies = async () => {
-        setIsLoading(() => true)
-        setError(() => null)
-
-        try {
-            const res = await fetch(`${process.env.API_URL}&s=${query}`)
-
-            if (!res.ok) {
-                throw new Error('Something went wrong with fetching movies...')
-            }
-
-            const data = await res.json()
-
-            if ('Search' in data) {
-                const convertedLowercaseKeys: Movie[] = data.Search.map((movie: Movie) => convertLowercaseKeys(movie))
-                setMovies(convertedLowercaseKeys)
-            } else {
-                setMovies(() => [])
-                throw new Error('No movies found...')
-            }
-        } catch (error) {
-            if (error instanceof Error) {
-                console.error('Error:', error.message)
-                setError(() => error.message)
-            } else {
-                console.error('An unknown error occurred:', error)
-                setError(() => `An unknown error occurred...`)
-            }
-        } finally {
-            setIsLoading(() => false)
-        }
+    function handleCloseMovieDetails() {
+        setSelectedMovieID(null)
     }
-
-    const debouncedFetchingMovies = useDebouncedCallback(() => {
-        if (!query.length) {
-            setMovies([])
-            setError(null)
-        } else {
-            void fetchMovies()
-        }
-    }, 1000)
 
     const handleSelectMovie = (imdbID: string) => {
         setSelectedMovieID(selectedMovieID === imdbID ? null : imdbID)
     }
 
-    const handleCloseMovieDetails = () => {
-        setSelectedMovieID(null)
-    }
-
     const handleAddWatchedMovie = (movie: WatchedMovie) => {
-        setWatched(prevWatched => {
-            const newWatchedMovies = [...prevWatched, movie]
-            localStorage.setItem('watchedMovies', JSON.stringify(newWatchedMovies))
-            return newWatchedMovies
-        })
+        setWatched(prevWatched => [...prevWatched, movie])
         setSelectedMovieID(null)
     }
 
     const handleRemoveWatchedMovie = (imdbID: string) => {
-        setWatched(prevWatched => {
-            const updatedWatchedMovies = prevWatched.filter(movie => movie.imdbID !== imdbID)
-            localStorage.setItem('watchedMovies', JSON.stringify(updatedWatchedMovies))
-            return updatedWatchedMovies
-        })
+        setWatched(prevWatched => prevWatched.filter(movie => movie.imdbID !== imdbID))
     }
-
-    useEffect(() => {
-        debouncedFetchingMovies()
-    }, [query])
 
     useEffect(() => {
         const storedJSON = localStorage.getItem('watchedMovies')

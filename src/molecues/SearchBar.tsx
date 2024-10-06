@@ -1,6 +1,7 @@
 import { ChangeEvent, useEffect, useRef } from 'react'
 import { Movie } from '../App.tsx'
 import { Nullable } from '../types/utilities'
+import { useKey } from '../hooks/useKey'
 
 type SearchBarProps = {
     movies: Movie[]
@@ -21,24 +22,16 @@ const SearchBar = ({ query, setQuery }: SearchBarProps) => {
         }
     }, [inputEl.current])
 
-    useEffect(() => {
-        const callBack = (e: KeyboardEvent) => {
-            if (document.activeElement === inputEl.current) {
-                return
-            }
-
-            if (e.code === 'Enter' && inputEl.current) {
-                inputEl.current.focus()
-                setQuery('')
-            }
+    useKey('Enter', () => {
+        if (document.activeElement === inputEl.current) {
+            return
         }
 
-        document.addEventListener('keydown', callBack)
-
-        return () => {
-            document.removeEventListener('keydown', callBack)
+        if (inputEl && inputEl.current) {
+            inputEl.current.focus()
+            setQuery('')
         }
-    }, [setQuery])
+    })
 
     return (
         <input
