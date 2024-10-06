@@ -1,5 +1,5 @@
-import { WatchedMovie } from '../App'
 import WatchedMoviesListItem from './WatchedMoviesListItem'
+import { WatchedMovie } from '../hooks/useLocalStorageState'
 
 type WatchedMovieListProps = {
     watched: WatchedMovie[]

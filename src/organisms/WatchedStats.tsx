@@ -1,4 +1,4 @@
-import { WatchedMovie } from '../App.tsx'
+import { WatchedMovie } from '../hooks/useLocalStorageState'
 
 type WatchedStatsProps = {
     watched: WatchedMovie[]
